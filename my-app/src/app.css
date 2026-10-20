@@ -1,0 +1,14 @@
+/* Universal Reset to Kill Browser Default Edges */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* Prevents tiny accidental horizontal scrollbars */
+  background-color: #0f1115; /* Matches your Hero dark theme to eliminate flashes */
+}
+
+/* Ensure all elements calculate their true dimensions safely */
+* {
+  box-sizing: border-box;
+}

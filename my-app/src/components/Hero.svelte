@@ -3,7 +3,7 @@
    * Triggers a smooth programmatic scroll to the first interactive section
    */
   function handleScrollTrigger() {
-    const nextSection = document.querySelector('.scroll-container');
+    const nextSection = document.querySelector('.scrolly-wrapper');
     if (nextSection) {
       nextSection.scrollIntoView({ behavior: 'smooth' });
     }
@@ -32,7 +32,7 @@
     </p>
 
     <div class="author-byline-block">
-      <span class="byline-label">By</span> <strong class="author-name">Your Name</strong>
+      <span class="byline-label">By</span> <strong class="author-name">Dika Manne</strong>
       <span class="divider">|</span>
       <span class="publish-date">October 2026</span>
     </div>
@@ -40,7 +40,7 @@
     <!-- Scrollytelling Entry Point Action Button -->
     <button 
       class="scroll-action-trigger" 
-      on:click={handleScrollTrigger}
+      onclick={handleScrollTrigger}
       aria-label="Scroll down to begin the investigation"
     >
       <span class="action-text">Scroll to explore</span>
