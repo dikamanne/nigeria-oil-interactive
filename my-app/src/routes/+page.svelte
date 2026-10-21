@@ -3,7 +3,6 @@
   import Hero from '../components/Hero.svelte';
   import Latch from '../components/Latch.svelte';
   import Legal from '../components/Legal.svelte';
-  import Ledger from '../components/Ledger.svelte';
 </script>
 
 <!-- 2. Mount the Entry Hero Panel at the top of the viewport -->
@@ -15,8 +14,7 @@
 <!-- 3. Historical Document Inspector Element -->
 <Legal />
 
-<!-- 4. Mount the Financial Accumulation Engine -->
-<Ledger />
+
 
 
 <footer class="development-sandbox-footer">

@@ -39,7 +39,7 @@
 </script>
 
 <div class="scrolly-wrapper">
-  <!-- STICKY MAP GRAPHIC CONTAINER: Stays fixed in place while text rolls past -->
+  <!-- sticky map container -->
   <div class="sticky-visual-viewport">
     <div class="map-render-plane" style="transform: scale({activeView.scale}) translate({activeView.x}px, {activeView.y}px);">
       <!-- SVG Mock Map Representation of Nigeria/Niger Delta Bounds -->
