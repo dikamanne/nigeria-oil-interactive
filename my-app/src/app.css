@@ -12,3 +12,10 @@ html, body {
 * {
   box-sizing: border-box;
 }
+@font-face {
+  font-family: 'MalaTesta';
+  src: url('lib/fonts/malatCKU.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+

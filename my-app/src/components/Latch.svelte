@@ -127,7 +127,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #0c0e12;
+    background-color: #FDF6E2;
     z-index: 1;
     overflow: hidden;
     border-bottom: 1px solid #1a202c;
@@ -169,7 +169,7 @@
   }
 
   .hud-label { color: #718096; margin-right: 0.5rem; }
-  .hud-value { color: #cf9b13; font-weight: bold; }
+  .hud-value { color: #341539; font-weight: bold; }
 
   /* Narrative Scrolling Container Track Layout */
   .narrative-scroller-track {
@@ -191,7 +191,7 @@
   /* Newsroom card component layout constraints */
   .content-editorial-card {
     background: rgba(15, 17, 21, 0.96);
-    border-top: 3px solid #cf9b13;
+    border-top: 3px solid #341539;
     padding: 2.2rem;
     max-width: 420px;
     pointer-events: auto; /* Restores interactive click handling on foreground items */
@@ -202,7 +202,7 @@
   .step-indexer {
     font-family: monospace;
     font-size: 0.75rem;
-    color: #cf9b13;
+    color: #341539;
     letter-spacing: 0.1em;
     display: block;
     margin-bottom: 0.8rem;
