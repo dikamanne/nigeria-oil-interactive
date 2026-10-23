@@ -5,11 +5,11 @@
   
   let paragraphElements: HTMLParagraphElement[] = [];
 
-  const steps = [
+  const steps = [ 
     {
       id: 1,
       title: "Mineral Oils Ordinance, 1914",
-      fullText: "The entire property in and control of all mineral oils, and of all rivers, streams and watercourses throughout Nigeria, is and shall be vested in, the Crown.",
+      fullText: "'The entire property in and control of all mineral oils, and of all rivers, streams and watercourses throughout Nigeria, is and shall be vested in, the Crown.'",
       dialogue: "Colonial Decree: This 1914 ordinance legally guaranteed that only British companies could secure oil licenses in Nigeria.",
       popupSide: "left"
     },
@@ -25,7 +25,7 @@
       title: "Petroleum Act of 1969",
       fullText: "The ownership of, and all onshore and offshore revenues derived from, petroleum within Nigeria shall rest solely inside the federal military government apparatus.",
       dialogue: "Post-Colonial Shift: The state centralized oil assets, shifting control from regional communities directly to federal control.",
-      popupSide: "left"
+      popupSide: "top-bottom-right"
     }
   ];
 
@@ -68,7 +68,7 @@
   
   <div class="center-content-view">
     <div class="legal-paper-artifact">
-      <div class="archive-header">Government Gazette</div>
+      <div class="archive-header">GOVERNMENT GAZETTE</div>
       <div class="archive-body">
         {#each steps as step, i}
        
@@ -131,8 +131,10 @@
   }
 
   .archive-header {
-    font-family: monospace;
-    font-size: 0.8rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 2rem;
+    justify-content: center;
+    align-items: center;
     color: rgba(52, 21, 57, 0.6);
     border-bottom: 1px dashed #C4BBA3;
     padding-bottom: 1rem;
@@ -197,6 +199,10 @@
     animation: slide-from-right 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
+  .side-top-bottom-right{
+    animation:  slide-from-top-bottom-right 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   .analysis-popup-box {
     background-color: #341539;
     color: #FDF6E2;
@@ -240,5 +246,17 @@
       opacity: 1;
       transform: translateX(0) scale(1);
     }
+  }
+
+  @keyframes slide-from-top-bottom-right{
+    from {
+      opacity:0;
+      transform: translateX(30px) scale (1)
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1)
+    }
+
   }
 </style>
