@@ -22,7 +22,7 @@
     </h1>
 
     <p class="hero-sub-narrative">
-      a visual investigation on the legal and geographical history of Nigeria's relationship with oil 
+      a visual investigation on the legal history of Nigeria's relationship with oil 
     </p>
 
     <div class="author-byline-block">
