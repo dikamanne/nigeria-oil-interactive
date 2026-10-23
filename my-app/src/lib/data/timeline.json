@@ -1,0 +1,39 @@
+
+[
+  {
+    "id": "colonial-crown-1914",
+    "year": "1914 - 1916",
+    "title": "The Colonial Mineral Ordinance (No. 17)",
+    "location": "The Amalgamated Territory of Nigeria",
+    "coordinates": [7.4898, 9.0820], 
+    "zoom": 6,
+    "lawCited": "Section 3(1): 'The entire property in and control of minerals, and mineral oils... is vested in the Crown.'",
+    "legalMechanism": "Monopoly Expropriation",
+    "analyticalLens": "Vested resource ownership exclusively in the British Crown, stripping indigenous traditional caretakers of sub-surface rights and explicitly banning non-British corporations from obtaining concessions.",
+    "url": "https://jsd-africa.com"
+  },
+  {
+    "id": "postcolonial-centralization-1969",
+    "year": "1969",
+    "title": "The Petroleum Act of 1969",
+    "location": "Lagos (Federal Capital Era)",
+    "coordinates": [3.3792, 6.4551],
+    "zoom": 10,
+    "lawCited": "Section 1(1): 'The entire ownership and control of all petroleum in, under or upon any lands... shall vest in the State.'",
+    "legalMechanism": "Inherited Absolutism",
+    "analyticalLens": "Enacted on the eve of the Biafran War's conclusion, this statute directly adopted the colonial Crown's extractive supremacy, transferring absolute asset control seamlessly into the federal military state.",
+    "url": "https://www.africabib.org"
+  },
+  {
+    "id": "land-nationalization-1978",
+    "year": "1978",
+    "title": "The Land Use Act of 1978",
+    "location": "The Niger Delta Basin",
+    "coordinates": [6.2500, 4.7500],
+    "zoom": 8,
+    "lawCited": "Section 1: 'All land comprised in the territory of each State... is hereby vested in the Governor... in trust for all Nigerians.'",
+    "legalMechanism": "Fictional Trusteeship",
+    "analyticalLens": "By legalizing state nationalization of all surface rights, this act bypassed customary community consultation entirely. It removed the requirement for oil corporations to seek local consent, reducing indigenous occupancy to an easily revocable right.",
+    "url": "https://www.legal500.com"
+  }
+]
