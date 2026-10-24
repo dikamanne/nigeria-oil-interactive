@@ -1,10 +1,20 @@
 <script>
   import Hero from '../components/Hero.svelte';
   import Document from  '../components/Document.svelte';
+  import Clock from '../components/Clock.svelte';
+  import OilSpillMap from '../components/OilSpillMap.svelte';
+  import OilSentence from '../components/OilSentence.svelte';
+  import OilBarrel from '../components/OilBarrel.svelte';
 </script>
 
 <Hero />
 <Document />
+<Clock />
+<OilSpillMap />
+<OilSentence />
+<OilBarrel />
+
+
 
 
 <footer class="development-sandbox-footer">

@@ -1,435 +1,592 @@
-<script lang='ts'>
-  import { onMount } from 'svelte';
-  import { fly, fade } from 'svelte/transition';
+<script lang="ts">
+  // Concept: one sheet of paper, three laws, one sentence.
+  // The 1914 clause and the 1969 clause are nearly identical; scrolling
+  // reveals an editor's redline: "the Crown" -> "the State".
 
-  let currentStep = $state(1);
-  
-  // Interactive state tracking for the Page 1 Dialog Box
-  let isDialogOpen = $state(true); 
-  let currentDialogPage = $state(1);
+  type Clause = {
+    year: string;
+    label: string;
+    pre: string;
+    key: string;
+    post: string;
+    oldKey?: string;
+  };
 
-  let paragraphElements: HTMLParagraphElement[] = [];
+  type Step = {
+    clause: number; // -1 = none focused, 99 = all focused
+    eyebrow: string;
+    title: string;
+    body: string;
+    circle?: boolean;
+    redline?: boolean;
+    stamp?: string;
+    stat?: boolean;
+  };
 
-  const steps = [ 
+  // NOTE: wording is abridged. Check against the primary texts before publishing.
+  const clauses: Clause[] = [
     {
-      id: 1,
-      title: "Mineral Oils Ordinance, 1914",
-      fullText: "'The entire property in and control of all mineral oils, and of all rivers, streams and watercourses throughout Nigeria, is and shall be vested in, the Crown.'",
-      dialogue: "Colonial Decree: This 1914 ordinance legally guaranteed that only British companies could secure oil licenses in Nigeria.",
-      popupSide: "interactive-panel" // Intercepted by our modal block
+      year: '1914',
+      label: 'Mineral Oils Ordinance',
+      pre: 'The entire property in and control of all mineral oils, in, under or upon any lands in Nigeria, is and shall be vested in ',
+      key: 'the Crown',
+      post: '.'
     },
     {
-      id: 2,
-      title: "Shell-BP Monopoly Clause",
-      fullText: "An exclusive exploration license granted Shell-BP the sole right to search for oil across the entire mainland territory of Nigeria, spanning over 357,000 square miles.",
-      dialogue: "Corporate Footprint: By 1938, a single joint venture controlled the subsurface geography of the future nation.",
-      popupSide: "right"
+      year: '1938',
+      label: 'Shell D’Arcy licence',
+      pre: 'An exclusive licence to prospect for oil is granted over the whole of Nigeria, some ',
+      key: '357,000 square miles',
+      post: ', to a single company.'
     },
     {
-      id: 3,
-      title: "Petroleum Act of 1969",
-      fullText: "The ownership of, and all onshore and offshore revenues derived from, petroleum within Nigeria shall rest solely inside the federal military government apparatus.",
-      dialogue: "Post-Colonial Shift: The state centralized oil assets, shifting control from regional communities directly to federal control.",
-      popupSide: "top-bottom-right"
+      year: '1969',
+      label: 'Petroleum Decree',
+      pre: 'The entire property in and control of all petroleum, in, under or upon any lands in Nigeria, is and shall be vested in ',
+      key: 'the State',
+      oldKey: 'the Crown',
+      post: '.'
     }
   ];
 
-  function registerParagraph(node: HTMLParagraphElement, index: number) {
-    paragraphElements[index] = node;
-    return {
-      destroy() {
-        delete paragraphElements[index];
-      }
+  const steps: Step[] = [
+    {
+      clause: -1,
+      eyebrow: 'Nigeria and oil',
+      title: 'Three sentences decided who owns Nigeria’s oil',
+      body: 'The rules were written before the first barrel was exported. Keep scrolling to read them, and watch what changes and what doesn’t.'
+    },
+    {
+      clause: 0,
+      eyebrow: '1914',
+      title: 'One sentence erased ownership',
+      body: 'The colonial government declared that all mineral oil in Nigeria was vested in the Crown. Land held under customary tenure no longer included what lay beneath it.'
+    },
+    {
+      clause: 0,
+      circle: true,
+      stamp: 'Vested',
+      eyebrow: '1914',
+      title: 'The verb did the work',
+      body: 'Title moved from communities to the colonial state. Only a licence from that state could unlock the oil, and the Ordinance limited licences to British subjects and British companies.'
+    },
+    {
+      clause: 1,
+      stat: true,
+      eyebrow: '1938',
+      title: 'One licence, one country',
+      body: 'Shell D’Arcy, a Shell and Anglo-Persian partnership later renamed Shell-BP, received exclusive rights to explore across all of Nigeria. That is roughly four times the area of Great Britain.'
+    },
+    {
+      clause: 1,
+      stamp: 'Exclusive',
+      eyebrow: '1938',
+      title: 'Exclusivity drew the map',
+      body: 'No rival could prospect. Oil was found at Oloibiri in 1956 and exports began in 1958, through pipelines and terminals built to move crude out of the delta.'
+    },
+    {
+      clause: 2,
+      eyebrow: '1969',
+      title: 'Independence changed the flag, not the clause',
+      body: 'Nigeria became independent in 1960. In 1969, during the civil war, the military government’s Petroleum Decree vested all petroleum in the State. Offshore revenues followed in 1971.'
+    },
+    {
+      clause: 2,
+      redline: true,
+      stamp: 'Same sentence',
+      eyebrow: 'Compare',
+      title: 'One noun was swapped',
+      body: 'Set the 1914 and 1969 clauses side by side and the grammar is nearly identical. The Crown became the State. The people who lived above the oil stayed outside the sentence.'
+    },
+    {
+      clause: 99,
+      redline: true,
+      eyebrow: 'Today',
+      title: 'A legacy written in statute',
+      body: 'Federal ownership of minerals is still written into Nigeria’s Constitution, and the Niger Delta’s long dispute over who benefits traces back to these sentences.'
+    }
+  ];
+
+  let active = $state(0);
+  let count = $state(0);
+
+  const step = $derived(steps[active]);
+  const progress = $derived(
+    step.clause === 99 ? 2 : Math.max(step.clause, 0)
+  );
+
+  function focused(i: number) {
+    return step.clause === 99 || step.clause === i;
+  }
+
+  // Fires when a step crosses the vertical middle of the viewport.
+  function inview(node: HTMLElement, index: number) {
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) active = index;
+      },
+      { rootMargin: '-50% 0px -50% 0px' }
+    );
+    io.observe(node);
+    return { destroy: () => io.disconnect() };
+  }
+
+  // Counts up to 357,000 once the 1938 step is reached; resets if you scroll back above it.
+  $effect(() => {
+    const target = active >= 3 ? 357000 : 0;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || target === 0) {
+      count = target;
+      return;
+    }
+    const from = count;
+    const start = performance.now();
+    const duration = 1400;
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      count = Math.round(from + (target - from) * eased);
+      if (t < 1) raf = requestAnimationFrame(tick);
     };
-  }
-
-  // Intercept scroll tracking to reactivate dialogue block cleanly
-  function handleStepActivation(stepId: number) {
-    currentStep = stepId;
-    if (stepId === 1) {
-      isDialogOpen = true;
-      currentDialogPage = 1;
-    }
-  }
-
-  onMount(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const target = entry.target as HTMLElement;
-          if (target.dataset.step) {
-            handleStepActivation(parseInt(target.dataset.step, 10));
-          }
-        }
-      });
-    }, {
-      root: null,
-      rootMargin: "-30% 0px -30% 0px",
-      threshold: 0.5
-    });
-
-    paragraphElements.forEach(el => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   });
-
-  // Handle transparent backdrop click actions without warning
-  function handleBackdropClick(event: MouseEvent) {
-    if (event.target === event.currentTarget) {
-      isDialogOpen = false;
-    }
-  }
 </script>
 
-<section class="scrolly-wrapper">
-  
-  <div class="center-content-view">
-    <div class="legal-paper-artifact">
-      <div class="archive-header">GOVERNMENT GAZETTE</div>
-      <div class="archive-body">
-        {#each steps as step, i}
-          <p 
-            class="document-paragraph"
-            data-step={step.id}
-            use:registerParagraph={i}
-          >
-            {#if currentStep === step.id}
-              <span class="text-highlight">{step.fullText}</span>
-            {:else}
-              <span class="text-dimmed">{step.fullText}</span>
-            {/if}
-          </p>
-        {/each}
-      </div>
-    </div>
-  </div>
+<div class="grain" aria-hidden="true"></div>
 
-  <!-- Regular scrolling side popups (Only shows for Step 2 and Step 3) -->
-  <div class="dynamic-popup-container">
-    {#each steps as step}
-      {#if currentStep === step.id && step.popupSide !== 'interactive-panel'}
-        <div class="position-wrapper side-{step.popupSide}">
-          <div class="analysis-popup-box">
-            <h4 class="popup-title">{step.title}</h4>
-            <p class="popup-text">{step.dialogue}</p>
-          </div>
-        </div>
-      {/if}
-    {/each}
-  </div>
+<main class="scrolly">
+  <div class="stage" aria-hidden="false">
+    <ol class="rail" aria-label="Timeline">
+      {#each clauses as c, i}
+        <li class:reached={progress >= i} class:current={focused(i)}>
+          <span class="rail-dot"></span>
+          <span class="rail-year">{c.year}</span>
+        </li>
+      {/each}
+    </ol>
 
-</section>
+    <article class="paper" class:dimmed={step.clause === -1}>
+      <div class="margin-rule one"></div>
+      <div class="margin-rule two"></div>
 
-<!-- Listen globally for the Escape key to safely dismiss the interactive overlay -->
-<svelte:window onkeydown={(e) => { if (e.key === 'Escape') isDialogOpen = false; }} />
-
-{#if currentStep === 1 && isDialogOpen}
-  <!-- 1. The Backdrop is safely changed back to a <div>, avoiding nested button elements -->
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
-  <div 
-    class="dialog-backdrop" 
-    transition:fade={{ duration: 200 }} 
-    onclick={handleBackdropClick}
-  >
-    <!-- 2. Inner Panel Wrapper containing buttons is perfectly legal now -->
-    <div 
-      class="dialog-panel" 
-      transition:fly={{ y: 400, duration: 400 }}
-      onclick={(e) => e.stopPropagation()}
-    >
-      <header class="dialog-header">
-        <div class="header-meta">
-          <span class="meta-tag">Interactive Analysis</span>
-          <h2>{steps[0].title} &mdash; Page {currentDialogPage} of 2</h2>
-        </div>
-        <!-- This nested close button is now perfectly fine -->
-        <button onclick={() => isDialogOpen = false} class="btn-close" aria-label="Close dialog">&times;</button>
+      <header class="paper-head">
+        <span>Exhibit A: laws vesting Nigerian oil</span>
+        <span>Abridged</span>
       </header>
 
-      <div class="dialog-body">
-        {#if currentDialogPage === 1}
-          <div class="dialog-page-wrapper" transition:fade={{ duration: 150 }}>
-            <h3>Historical Context</h3>
-            <p class="dialog-narrative">{steps[0].dialogue}</p>
-            <div class="historical-note-card">
-              <strong>Archive Note:</strong> Notice how the language completely redefines regional resource control, prioritizing external crown structures over indigenous sovereignty.
-            </div>
-          </div>
-        {:else}
-          <div class="dialog-page-wrapper" transition:fade={{ duration: 150 }}>
-            <h3>Economic Imperialism Implications</h3>
-            <p class="dialog-narrative">By locking access strictly down to corporate charters approved by the Crown, alternative localized networks were cleanly criminalized before exploitation even started.</p>
-            <div class="historical-note-card mapping">
-              <strong>Geographical Scope:</strong> This legal foundation laid the map assignments for initial surveying tracks.
-            </div>
-          </div>
-        {/if}
+      <div class="clauses">
+        {#each clauses as c, i}
+          <section class="clause" class:on={focused(i)}>
+            <span class="clause-year">{c.year}<small>{c.label}</small></span>
+            <p>
+              {c.pre}<span
+                class="key"
+                class:hl={focused(i)}
+                class:circled={i === 0 && step.circle && focused(i)}
+                class:redlined={c.oldKey && step.redline}
+              >
+                {#if c.oldKey}
+                  <span class="old">{c.oldKey}</span>
+                {/if}
+                {c.key}</span
+              >{c.post}
+            </p>
+          </section>
+        {/each}
       </div>
 
-      <footer class="dialog-footer">
-        {#if currentDialogPage > 1}
-          <button onclick={() => currentDialogPage--} class="btn-secondary">Back</button>
+      {#key step.stamp}
+        {#if step.stamp}
+          <div class="stamp">{step.stamp}</div>
         {/if}
-        <div class="spacer"></div>
-        {#if currentDialogPage < 2}
-          <button onclick={() => currentDialogPage++} class="btn-primary">Next Part</button>
-        {:else}
-          <button onclick={() => isDialogOpen = false} class="btn-success">Return to Document</button>
-        {/if}
-      </footer>
-    </div>
+      {/key}
+    </article>
   </div>
-{/if}
+
+  <div class="steps">
+    {#each steps as s, i}
+      <section class="step" use:inview={i}>
+        <div class="card" class:live={active === i}>
+          <p class="eyebrow">{s.eyebrow}</p>
+          <h2>{s.title}</h2>
+          <p class="body">{s.body}</p>
+          {#if s.stat}
+            <p class="stat">
+              <span class="num">{count.toLocaleString('en-US')}</span>
+              <span class="unit">square miles under one licence</span>
+            </p>
+          {/if}
+        </div>
+      </section>
+    {/each}
+  </div>
+</main>
 
 <style>
-  /* --- Keeping Your Main Layout Intact --- */
-  .scrolly-wrapper {
-    position: relative;
-    background-color: #E6DEC9; 
-    width: 100%;
-    min-height: 140vh;
-    box-sizing: border-box;
-    padding: 15vh 2rem 25vh 2rem;
-  }
-
-  .center-content-view {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
-
-  .legal-paper-artifact {
-    background-color: #FDF6E2; 
-    border: 1px solid #C4BBA3;
-    width: 100%;
-    max-width: 850px; 
-    padding: 4rem;    
-    border-radius: 2px;
-    box-shadow: 0 16px 40px rgba(52, 21, 57, 0.06);
-  }
-
-  .archive-header {
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: 2rem;
-    justify-content: center;
-    align-items: center;
-    color: rgba(52, 21, 57, 0.6);
-    border-bottom: 1px dashed #C4BBA3;
-    padding-bottom: 1rem;
-    margin-bottom: 2.5rem;
-    letter-spacing: 0.08em;
-  }
-
-  .document-paragraph {
-    font-size: clamp(1.1rem, 1.8vw, 1.35rem);
-    line-height: 1.8;
-    margin-bottom: 14rem; /* Slightly extended to improve scroll-separation between milestones */
-    font-weight: 400;
-  }
-  .document-paragraph:last-child {
-    margin-bottom: 2rem;
-  }
-
-  .text-dimmed {
-    color: rgba(52, 21, 57, 0.2);
-    transition: color 0.5s ease;
-  }
-
-  .text-highlight {
-    color: #341539;
-    background: linear-gradient(120deg, rgba(253, 246, 226, 0) 0%, rgba(214, 203, 175, 0.7) 100%);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    animation: text-swipe-in 0.8s ease-out forwards;
-    transition: color 0.5s ease;
-  }
-
-  @keyframes text-swipe-in {
-    from { background-size: 0% 100%; }
-    to { background-size: 100% 100%; }
-  }
-
-  .dynamic-popup-container {
-    position: sticky;
-    bottom: 8%;
-    left: 0;
-    width: 100%;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  .position-wrapper {
-    position: absolute;
-    width: 100%;
-    max-width: 380px;
-    pointer-events: auto;
-  }
-
-  .side-right {
-    right: 4%;
-    bottom: 0;
-    animation: slide-from-right 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .side-top-bottom-right{
-    animation:  slide-from-top-bottom-right 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .analysis-popup-box {
-    background-color: #341539;
-    color: #FDF6E2;
-    padding: 1.25rem 1.5rem;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-    border-left: 4px solid #C4BBA3;
-  }
-
-  .popup-title {
-    margin: 0 0 0.4rem 0;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #E6DEC9;
-  }
-
-  .popup-text {
+  :global(body) {
     margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    font-weight: 300;
+    background: #14100d;
   }
 
-  /* --- Interactive Dialogue Backdrop and Window Styles --- */
-  .dialog-backdrop {
+  .scrolly {
+    --ink: #2b241a;
+    --paper: #f5eedb;
+    --rule: #cfc4a9;
+    --red: #b3261e;
+    --gold: rgba(226, 186, 82, 0.65);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    background: #14100d;
+    color: #efe7d4;
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  }
+
+  .grain {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(52, 21, 57, 0.4); /* Colored blur match */
-    backdrop-filter: blur(5px);
-    display: flex;
-    justify-content: center;
-    align-items: flex-end; 
-    z-index: 999;
-    border: none;
-    padding: 0;
-    text-align: left;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  .dialog-panel {
-    background: #FDF6E2;
-    width: 100%;
-    max-width: 780px;
-    height: 60vh;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+  /* ---------- Stage (sticky) ---------- */
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 -15px 35px rgba(52, 21, 57, 0.15);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    justify-content: center;
+    padding: 4vh 4vw;
+    box-sizing: border-box;
+    width: 58%;
+  }
+
+  .rail {
+    list-style: none;
+    margin: 0 0 2.2vh;
+    padding: 0;
+    display: flex;
+    gap: 2.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: #7d725d;
+  }
+  .rail li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    transition: color 0.5s var(--ease);
+  }
+  .rail-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid currentColor;
+    transition: background 0.5s var(--ease), border-color 0.5s var(--ease);
+  }
+  .rail li.reached {
+    color: #bfb39a;
+  }
+  .rail li.current {
+    color: #efe7d4;
+  }
+  .rail li.current .rail-dot {
+    background: var(--red);
+    border-color: var(--red);
+  }
+
+  /* ---------- Paper ---------- */
+  .paper {
+    position: relative;
+    background: var(--paper);
+    color: var(--ink);
+    padding: clamp(1.5rem, 4.5vh, 3rem) clamp(1.2rem, 3vw, 3rem) clamp(1.5rem, 4.5vh, 3rem)
+      clamp(3.2rem, 7vw, 6rem);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
     overflow: hidden;
+    transition: transform 0.9s var(--ease), filter 0.9s var(--ease);
+  }
+  .paper.dimmed {
+    filter: brightness(0.8);
+    transform: scale(0.985);
+  }
 
-border: 1px solid #C4BBA3;
-}
-@media (min-width: 768px) {
-.dialog-backdrop {
-align-items: center;
-}
-.dialog-panel {
-border-radius: 8px;
-height: 55vh;
-}
-}
-.dialog-header {
-display: flex;
-justify-content: space-between;
-align-items: flex-start;
-padding: 1.5rem;
-border-bottom: 1px solid #D6CBAF;
-}
-.meta-tag {
-font-size: 0.75rem;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-color: #a49673;
-font-weight: 600;
-display: block;
-margin-bottom: 0.25rem;
-}
-.dialog-header h2 {
-margin: 0;
-font-size: 1.2rem;
-color: #341539;
-font-family: Georgia, serif;
-}
-.btn-close {
-background: transparent;
-border: none;
-font-size: 2rem;
-line-height: 1;
-cursor: pointer;
-color: #C4BBA3;
-padding: 0;
-margin-top: -0.25rem;
-}
-.btn-close:hover {
-color: #341539;
-}
-.dialog-body {
-flex: 1;
-padding: 2rem;
-overflow-y: auto;
-background: #FAF3DE;
-}
-.dialog-narrative {
-font-size: 1.05rem;
-line-height: 1.6;
-color: #341539;
-margin: 0 0 1.5rem 0;
-}
-.historical-note-card {
-background: #341539;
-color: #FDF6E2;
-padding: 1rem 1.25rem;
-border-radius: 4px;
-font-size: 0.9rem;
-line-height: 1.5;
-border-left: 4px solid #C4BBA3;
-}
-.dialog-footer {
-display: flex;
-align-items: center;
-padding: 1rem 1.5rem;
-border-top: 1px solid #D6CBAF;
-background: #FDF6E2;
-}
-.spacer {
-flex: 1;
-}
-/* Footer Actions buttons matching the page aesthetic */
-.btn-primary, .btn-secondary, .btn-success {
-padding: 0.6rem 1.2rem;
-border-radius: 4px;
-font-weight: 500;
-cursor: pointer;
-border: none;
-font-size: 0.9rem;
-}
-.btn-primary { background: #341539; color: #FDF6E2; }
-.btn-secondary { background: #E6DEC9; color: #341539; border: 1px solid #C4BBA3; }
-.btn-success { background: #5F6B43; color: white; }
-/* --- Keeping Rest of Animation Blocks Exactly the Same --- */
-@keyframes slide-from-right {
-from { opacity: 0; transform: translateX(30px) scale(0.97); }
-to { opacity: 1; transform: translateX(0) scale(1); }
-}
-@keyframes slide-from-top-bottom-right {
-from { opacity: 0; transform: translateX(30px); }
-to { opacity: 1; transform: translateY(0); }
-}
+  .margin-rule {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(179, 38, 30, 0.38);
+  }
+  .margin-rule.one {
+    left: clamp(2.2rem, 5vw, 4.4rem);
+  }
+  .margin-rule.two {
+    left: calc(clamp(2.2rem, 5vw, 4.4rem) + 4px);
+  }
 
+  .paper-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #8c7c5e;
+    padding-bottom: 0.9rem;
+    margin-bottom: clamp(1.2rem, 4vh, 2.4rem);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .clause {
+    position: relative;
+    margin-bottom: clamp(1.4rem, 5vh, 3rem);
+    opacity: 0.2;
+    transform: translateX(0);
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  }
+  .clause:last-child {
+    margin-bottom: 0;
+  }
+  .clause.on {
+    opacity: 1;
+    transform: translateX(6px);
+  }
+
+  .clause-year {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #8c7c5e;
+  }
+  .clause-year small {
+    margin-left: 0.6rem;
+    font-weight: 400;
+    font-size: inherit;
+  }
+
+  .clause p {
+    margin: 0;
+    font-size: clamp(1.1rem, 1.55vw, 1.45rem);
+    line-height: 1.7;
+    max-width: 38em;
+  }
+
+  /* Key phrase: ink-sweep highlight */
+  .key {
+    position: relative;
+    display: inline;
+    background-image: linear-gradient(180deg, transparent 62%, var(--gold) 62%);
+    background-repeat: no-repeat;
+    background-size: 0% 100%;
+    transition: background-size 0.9s var(--ease) 0.15s;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    font-weight: 600;
+  }
+  .key.hl {
+    background-size: 100% 100%;
+  }
+
+  /* Hand-drawn circle */
+  .key.circled::after {
+    content: '';
+    position: absolute;
+    inset: -0.15em -0.35em;
+    border: 2px solid var(--red);
+    border-radius: 50% 45% 55% 48% / 60% 50% 55% 50%;
+    transform: rotate(-2deg);
+    animation: draw 0.7s var(--ease) both;
+  }
+  @keyframes draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* Editor's redline: the 1914 word sits above, struck through */
+  .key .old {
+    position: absolute;
+    left: 0;
+    top: -1.35em;
+    font-family: 'Segoe Script', 'Bradley Hand', cursive;
+    font-size: 0.8em;
+    font-weight: 400;
+    color: var(--red);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.7s var(--ease) 0.3s, transform 0.7s var(--ease) 0.3s;
+  }
+  .key.redlined .old {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .stamp {
+    position: absolute;
+    right: clamp(1rem, 3vw, 2.4rem);
+    bottom: clamp(1rem, 3vh, 2rem);
+    padding: 0.35rem 0.9rem;
+    border: 3px double var(--red);
+    color: var(--red);
+    font-size: clamp(1rem, 1.6vw, 1.5rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.85;
+    mix-blend-mode: multiply;
+    transform: rotate(-9deg);
+    animation: thud 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+  @keyframes thud {
+    from {
+      opacity: 0;
+      transform: rotate(-9deg) scale(1.5);
+    }
+    to {
+      opacity: 0.85;
+      transform: rotate(-9deg) scale(1);
+    }
+  }
+
+  /* ---------- Steps (scroll track) ---------- */
+  .steps {
+    position: relative;
+    z-index: 2;
+    margin-top: -100vh;
+    margin-top: -100dvh;
+    pointer-events: none;
+  }
+  .step {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 4vw;
+    box-sizing: border-box;
+  }
+  .card {
+    width: min(30rem, 36vw);
+    pointer-events: auto;
+    opacity: 0.22;
+    transform: translateY(14px);
+    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  }
+  .card.live {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .eyebrow {
+    margin: 0 0 0.7rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #d9b45a;
+    font-variant-numeric: tabular-nums;
+  }
+  h2 {
+    margin: 0 0 1rem;
+    font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f7f0de;
+  }
+  .body {
+    margin: 0;
+    font-size: clamp(1.02rem, 1.25vw, 1.2rem);
+    line-height: 1.65;
+    color: #d6ccb6;
+  }
+
+  .stat {
+    margin: 1.6rem 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(239, 231, 212, 0.25);
+  }
+  .num {
+    display: block;
+    font-size: clamp(2.4rem, 4.4vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #f7f0de;
+    font-variant-numeric: tabular-nums;
+  }
+  .unit {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    color: #a99d85;
+  }
+
+  /* ---------- Small screens: paper on top, text card slides over the bottom ---------- */
+  @media (max-width: 860px) {
+    .stage {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 3vh 4vw;
+    }
+    .rail {
+      gap: 1.4rem;
+      margin-bottom: 1.4vh;
+    }
+    .paper {
+      padding: 1.2rem 1rem 1.2rem 2.6rem;
+    }
+    .margin-rule.one {
+      left: 1.8rem;
+    }
+    .margin-rule.two {
+      left: calc(1.8rem + 4px);
+    }
+    .clause p {
+      font-size: 0.98rem;
+      line-height: 1.55;
+    }
+    .step {
+      align-items: flex-end;
+      justify-content: center;
+      padding: 0 4vw 3vh;
+    }
+    .card {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(20, 16, 13, 0.94);
+      border-top: 2px solid var(--red);
+      padding: 1rem 1.1rem 1.2rem;
+    }
+    h2 {
+      font-size: 1.35rem;
+      margin-bottom: 0.5rem;
+    }
+    .body {
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .num {
+      font-size: 2rem;
+    }
+    .stat {
+      margin-top: 0.8rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scrolly *,
+    .scrolly *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
 </style>

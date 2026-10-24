@@ -1,0 +1,28 @@
+/* Shared styles for OilSpillMap, OilSentence and OilBarrel. Import once per component. */
+body::after{content:'';position:fixed;inset:0;z-index:50;pointer-events:none;opacity:.05;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.sc{--paper:#f5eedb;--ink:#2b241a;--red:#b3261e;--gold:#d9b45a;--mute:#a99d85;--ease:cubic-bezier(.22,1,.36,1);
+position:relative;background:#14100d;color:#efe7d4;font-family:'Source Serif 4',Georgia,'Times New Roman',serif}
+.sc-stage{position:sticky;top:0;height:100vh;height:100dvh;width:60%;z-index:1;box-sizing:border-box;
+padding:5vh 3vw 4vh 4vw;display:flex;flex-direction:column;justify-content:center;gap:2.4vh}
+.sc-steps{position:relative;z-index:2;margin-top:-100vh;margin-top:-100dvh;pointer-events:none}
+.sc-step{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:flex-end;padding:0 4vw;box-sizing:border-box}
+.sc-card{width:min(28rem,32vw);pointer-events:auto;opacity:.22;transform:translateY(14px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.sc-card.live{opacity:1;transform:none}
+.sc-eyebrow{margin:0 0 .7rem;font-size:.9rem;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
+.sc-card h2{margin:0 0 1rem;font-size:clamp(1.6rem,2.6vw,2.35rem);line-height:1.15;font-weight:700;letter-spacing:-.01em;color:#f7f0de}
+.sc-body{margin:0;font-size:clamp(1rem,1.2vw,1.15rem);line-height:1.65;color:#d6ccb6}
+.sc-note{margin:.9rem 0 0;font-size:.82rem;line-height:1.45;color:#8c8068}
+.sc-stats{list-style:none;margin:1.5rem 0 0;padding:0;display:grid;gap:1rem}
+.sc-stats li{padding-top:.9rem;border-top:1px solid rgba(239,231,212,.25)}
+.sc-num{display:block;font-size:clamp(1.7rem,3vw,2.6rem);font-weight:700;line-height:1.05;color:#f7f0de}
+.sc-unit{display:block;margin-top:.3rem;font-size:.9rem;color:var(--mute)}
+.sc-src{margin:0;font-size:.75rem;line-height:1.4;color:#7d725d;max-width:44em}
+@media(max-width:860px){
+.sc-stage{width:100%;justify-content:flex-start;padding:3vh 4vw;gap:1.4vh}
+.sc-src{display:none}
+.sc-step{align-items:flex-end;justify-content:center;padding:0 4vw 3vh}
+.sc-card{width:100%;box-sizing:border-box;background:rgba(20,16,13,.95);border-top:2px solid var(--red);padding:1rem 1.1rem 1.2rem}
+.sc-card h2{font-size:1.3rem;margin-bottom:.5rem}.sc-body{font-size:.92rem;line-height:1.5}
+.sc-stats{margin-top:.9rem;gap:.6rem}.sc-num{font-size:1.4rem}}
+@media(prefers-reduced-motion:reduce){.sc *{transition-duration:.01ms!important;animation-duration:.01ms!important}}
