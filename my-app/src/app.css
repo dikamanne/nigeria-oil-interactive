@@ -1,17 +1,18 @@
-/* Universal Reset to Kill Browser Default Edges */
+/* Reset. Note: no height:100% and no overflow on html/body.
+   Those turn body into a scroll container and break sticky + scrollY. */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
-  overflow-x: hidden; /* Prevents tiny accidental horizontal scrollbars */
-  background-color: #0f1115; /* Matches your Hero dark theme to eliminate flashes */
+  background-color: #0f1115; /* matches your Hero dark theme */
 }
 
-/* Ensure all elements calculate their true dimensions safely */
-* {
-  box-sizing: border-box;
-}
+/* "clip" stops horizontal overflow WITHOUT creating a scroll container.
+   (overflow-x: hidden does create one, which is what broke the story.) */
+body { overflow-x: clip; }
+
+* { box-sizing: border-box; }
+
 @font-face {
   font-family: 'MalaTesta';
   src: url('lib/fonts/malatCKU.ttf') format('truetype');
@@ -19,3 +20,37 @@ html, body {
   font-style: normal;
 }
 
+/* Colours for the pipeline story, tuned for your dark background. */
+:root {
+  --bg: #0f1115;
+  --ink: #e6eadf;
+  --muted: #9aa69f;
+  --card: #1a1f26;
+  --line: #3d4c46;
+  --highlight: #e8b73a;
+  --community: #7fae78;
+  --crown: #9fb0ff;
+  --federal: #52c0c8;
+  --governors: #cf8be3;
+  --serif: 'Newsreader', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+
+body {
+  color: var(--ink);
+  font: 400 1.1rem/1.6 var(--serif);
+}
+
+h1, h2 { line-height: 1.05; margin: 0 0 0.5em; }
+
+.btn {
+  font: 500 0.9rem var(--mono);
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+.btn:hover { background: var(--highlight); color: #12201c; }
+.btn:focus-visible, [role='button']:focus-visible { outline: 3px solid var(--highlight); outline-offset: 3px; }
+.btn[disabled] { opacity: 0.35; cursor: default; }

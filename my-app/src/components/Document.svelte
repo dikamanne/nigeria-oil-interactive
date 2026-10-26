@@ -1,7 +1,5 @@
 <script lang="ts">
-  // Concept: one sheet of paper, three laws, one sentence.
-  // The 1914 clause and the 1969 clause are nearly identical; scrolling
-  // reveals an editor's redline: "the Crown" -> "the State".
+  
 
   type Clause = {
     year: string;
@@ -13,7 +11,7 @@
   };
 
   type Step = {
-    clause: number; // -1 = none focused, 99 = all focused
+    clause: number; 
     eyebrow: string;
     title: string;
     body: string;
@@ -23,7 +21,6 @@
     stat?: boolean;
   };
 
-  // NOTE: wording is abridged. Check against the primary texts before publishing.
   const clauses: Clause[] = [
     {
       year: '1914',
